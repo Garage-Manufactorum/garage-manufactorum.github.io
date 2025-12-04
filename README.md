@@ -1,16 +1,29 @@
-## Hi there 👋
+# GARAGE MANUFACTORUM
 
-<!--
-**Garage-Manufactorum/Garage-Manufactorum** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+### *Moins de montage, plus de carnage.*
 
-Here are some ideas to get you started:
+---
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## 🛠️ L'Atelier
+
+**Garage Manufactorum** est un atelier artisanal indépendant français, né de la rencontre entre la technologie de l'impression 3D FDM et la passion du Wargame.
+
+Notre mission : fournir aux joueurs des décors immersifs, massifs et robustes, taillés pour le jeu. Nous transformons le filament brut en champs de batailles épiques (Ruines Gothiques, Secteurs Industriels, Sci-Fi), prêts à encaisser les dés et les transports.
+
+Nous opérons sous **licences commerciales officielles** (partenariat avec des créateurs comme *Sacrusmundus*) pour garantir un soutien à l'écosystème créatif et une transparence totale via nos certificats d'authenticité.
+
+---
+
+## 📂 Liens Rapides & Documentation
+
+Ce dépôt GitHub héberge la documentation officielle et les certificats numériques de notre atelier.
+
+### 👉 **[📄 CONSULTER LE MANIFESTE OFFICIEL (PDF)](https://garagemanufactorum.github.io/manifeste.pdf)**
+*Le document de référence présentant notre philosophie, nos engagements et les détails de compatibilité (Warhammer 40k, Kill Team, etc.).*
+
+### 👉 **[🛒 VISITER NOTRE BOUTIQUE ]([VOTRE_LIEN_VINTED_ICI])**
+*Retrouvez nos lots de décors "Battle Ready" (peints) disponibles immédiatement.*
+
+---
+
+*(Note technique : Ce projet utilise GitHub Pages pour l'hébergement pérenne des certificats d'authenticité liés à nos productions physiques via technologie NFC.)*
