@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manifeste - Garage Manufactorum</title>
+    
+    <!-- Polices Google Fonts pour le style Grimdark/Industriel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Metamorphous&family=Rajdhani:wght@500;600;700&family=Teko:wght@400;600&family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CONFIGURATION GÉNÉRALE --- */
+        :root {
+            --primary-color: #1a1a1a; /* Noir Encre */
+            --accent-color: #8B0000; /* Rouge Sang Séché */
+            --text-color: #111;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            background-color: #f0e6d2; /* Couleur de repli */
+            
+            /* VOTRE TEXTURE DE FOND */
+            background-image: url('old grunge paper texture.jpg'); 
+            
+            background-size: cover;
+            background-repeat: repeat-y;
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Rajdhani', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Cadre principal style "Document Officiel" */
+        .page-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 50px;
+            border: 8px double var(--primary-color);
+            background-color: rgba(255, 255, 255, 0.7); /* Transparence pour voir la texture */
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* --- HEADER --- */
+        header {
+            text-align: center;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* VOTRE LOGO PRINCIPAL */
+        .main-logo {
+            max-width: 250px;
+            height: auto;
+            display: block;
+            margin: 0 auto 20px auto;
+            /* Petit effet pour l'intégrer au papier */
+            mix-blend-mode: multiply; 
+        }
+
+        h1 {
+            font-family: 'Metamorphous', cursive;
+            font-size: 3.5rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary-color);
+            line-height: 1.1;
+        }
+
+        .slogan {
+            font-family: 'Teko', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            margin-top: 5px;
+            letter-spacing: 1px;
+        }
+
+        /* --- CONTENU --- */
+        h2 {
+            font-family: 'Black Ops One', cursive;
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        h3 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.3rem;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            margin-top: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        p {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-align: justify;
+        }
+
+        strong {
+            font-weight: 700;
+            color: #000;
+        }
+
+        /* --- BLOC LÉGAL --- */
+        .legal-box {
+            margin-top: 50px;
+            border: 2px dashed var(--primary-color);
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .legal-box h2 {
+            font-size: 1.4rem;
+            border: none;
+            margin-top: 0;
+            text-decoration: underline;
+        }
+
+        .tags {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            color: #555;
+            font-style: italic;
+            margin-top: 15px;
+        }
+
+        /* --- FOOTER & QR --- */
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            border-top: 3px solid var(--primary-color);
+            padding-top: 30px;
+        }
+
+        .cta-text {
+            font-family: 'Black Ops One', cursive;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        /* VOTRE QR CODE */
+        .qr-img {
+            max-width: 180px;
+            border: 4px solid var(--primary-color);
+            padding: 5px;
+            background: white;
+            transition: transform 0.3s;
+        }
+        .qr-img:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        /* --- TAMPON DÉCORATIF --- */
+        .stamp-overlay {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            width: 140px;
+            opacity: 0.85;
+            transform: rotate(-12deg);
+            mix-blend-mode: multiply;
+            z-index: 10;
+        }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 600px) {
+            .page-container { padding: 20px; border-width: 4px; }
+            h1 { font-size: 2.2rem; }
+            .stamp-overlay { width: 80px; top: 10px; right: 10px; }
+            .main-logo { max-width: 180px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container">
+        
+        <!-- VOTRE TAMPON (Stamp) en haut à droite -->
+        <img src="logo_garage_manufactorum_stamp.jpg" alt="Stamp Garage Approved" class="stamp-overlay">
+
+        <header>
+            <!-- VOTRE LOGO PRINCIPAL -->
+            <img src="logo_garage_manufactorum4.jpg" alt="Logo Garage Manufactorum" class="main-logo">
+            
+            <h1>GARAGE MANUFACTORUM</h1>
+            <div class="slogan">Moins de montage, plus de carnage !</div>
+        </header>
+
+        <section>
+            <h2>QUI SOMMES-NOUS ?</h2>
+            <p>
+                <strong>Garage Manufactorum</strong> est un atelier artisanal indépendant français, né de la rencontre entre la technologie de l'impression 3D et la passion du Wargame. Notre mission est simple : fournir aux joueurs les décors immersifs, massifs et robustes qu'ils méritent, sans qu'ils aient à y passer leurs nuits ou leur salaire. Nous transformons le filament brut en champs de batailles épiques (Ruines Gothiques, Secteurs Industriels, Sci-Fi).
+            </p>
+        </section>
+
+        <section>
+            <h2>NOTRE PHILOSOPHIE : "LE JEU AVANT TOUT"</h2>
+            <p>
+                Contrairement aux figurines de vitrine, un décor doit vivre. Nos productions sont réalisées en <strong>FDM (PLA)</strong>. Ce choix délibéré garantit des structures solides, légères et durables, capables de résister aux transports en club et aux manipulations fréquentes lors des parties endiablées de Warhammer 40k, Star Wars Legion ou autres jeux 28-32mm.
+            </p>
+        </section>
+
+        <section>
+            <h2>CE QUE NOUS PROPOSONS :</h2>
+            
+            <h3>Des Licences Officielles</h3>
+            <p>Nous ne sommes pas des pirates. Toutes nos pièces sont imprimées en partenariat avec des créateurs de talent, sous licence commerciale active.</p>
+
+            <h3>Du "Prêt-à-Jouer" (Battle Ready)</h3>
+            <p>Votre temps de hobby est précieux. Nous proposons des lots déjà peints (niveau Tabletop) : sous-couchés, ombrés et brossés. Déballez, jouez.</p>
+
+            <h3>La Transparence Totale</h3>
+            <p>Chaque pièce majeure produite par notre atelier est traçable et certifiée via NFC, garantissant son origine et son authenticité.</p>
+        </section>
+
+        <div class="legal-box">
+            <h2>INFORMATIONS COMPLÉMENTAIRES & COMPATIBILITÉ</h2>
+            <p>
+                Ces décors sont des créations originales (Design : Sacrusmundus) imprimées sous licence commerciale. Ce ne sont PAS des produits officiels Games Workshop, Citadel ou autres marques citées. Ces ruines "grimdark" en 28mm/32mm sont idéales comme décors bloquants.
+            </p>
+            <p>
+                <strong>Parfaitement compatibles pour les univers de :</strong><br>
+                Warhammer 40k (WH40k), Kill Team, Necromunda, Horus Heresy (30k), Age of Sigmar (AoS), Warcry, Mordheim, OnePageRules (Grimdark Future), Stargrave, Deadzone, Five Parsecs from Home, Fallout Wasteland Warfare, Zona Alfa, Judge Dredd, Infinity, Malifaux, Warmachine, ainsi que pour vos JDR (D&D, Pathfinder).
+            </p>
+            <p class="tags">
+                Tags : Wargaming, Scenery, Tabletop, Terrain, Ruines, Industriel, Gothique, Sector, Imperial, décors peints, lot.
+            </p>
+        </div>
+
+        <footer>
+            <div class="cta-text">RETROUVEZ NOS DÉCORS DISPONIBLES :</div>
+            
+            <!-- VOTRE QR CODE -->
+            <a href="https://www.vinted.fr/member/35039830" target="_blank">
+                <img src="qr_code_boutique.png" alt="Accès Boutique Vinted" class="qr-img">
+            </a>
+            
+            <p style="font-size: 0.9rem; margin-top: 15px;">
+                Scannez pour accéder à la boutique.
+            </p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
