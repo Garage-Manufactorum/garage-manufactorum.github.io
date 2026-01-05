@@ -18,10 +18,10 @@ Nous opérons sous **licences commerciales officielles** (partenariat avec des c
 
 Ce dépôt GitHub héberge la documentation officielle et les certificats numériques de notre atelier.
 
-### 👉 **[📄 CONSULTER LE MANIFESTE OFFICIEL]([https://garage-manufactorum.github.io/manifeste.html])**
+### 👉 **[📄 CONSULTER LE MANIFESTE OFFICIEL](https://garage-manufactorum.github.io/manifeste.html)**
 *Le document de référence présentant notre philosophie, nos engagements et les détails de compatibilité (Warhammer 40k, Kill Team, etc.).*
 
-### 👉 **[🛒 VISITER NOTRE BOUTIQUE ]([https://www.vinted.fr/session-refresh?ref_url=%2Fmember%2F35039830])**
+### 👉 **[🛒 VISITER NOTRE BOUTIQUE ](https://www.vinted.fr/session-refresh?ref_url=%2Fmember%2F35039830)**
 *Retrouvez nos lots de décors "Battle Ready" (peints) disponibles immédiatement.*
 
 ---
