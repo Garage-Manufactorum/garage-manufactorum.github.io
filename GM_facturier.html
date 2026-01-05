@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garage Manufactorum - ERP v11.7</title>
+    
+    <!-- Polices -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Metamorphous&family=Rajdhani:wght@500;600;700&family=Teko:wght@400;600&family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <!-- Librairies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* UI SOMBRE */
+        body { background-color: #0d0d0d; color: #d4d4d4; font-family: 'Rajdhani', sans-serif; font-weight: 500; font-size: 15px;}
+        .panel { background-color: #171717; border: 1px solid #333; border-radius: 4px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .input-dark { background-color: #222; border: 1px solid #444; color: #eee; padding: 6px 10px; width: 100%; border-radius: 2px; font-family: 'Rajdhani'; transition: border 0.3s; font-size: 0.95rem; }
+        .input-dark:focus { border-color: #d97706; outline: none; background-color: #2a2a2a; }
+        
+        .btn { padding: 6px 16px; border-radius: 2px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85em; user-select: none; transition: all 0.2s; }
+        .btn-primary { background-color: #9a3412; color: white; border: 1px solid #c2410c; }
+        .btn-primary:hover { background-color: #c2410c; }
+        .btn-success { background-color: #166534; color: white; border: 1px solid #15803d; }
+        .btn-success:hover { background-color: #15803d; }
+        .btn-secondary { background-color: #262626; color: #aaa; border: 1px solid #444; }
+        .btn-secondary:hover { background-color: #333; color: white; border-color: #666; }
+        .btn-danger { background-color: #7f1d1d; color: white; border: 1px solid #991b1b; }
+        .btn-github { background-color: #24292e; color: white; border: 1px solid #444; }
+
+        /* Badges Stock */
+        .stock-tag { padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; font-weight: bold; font-family: 'Share Tech Mono'; }
+        .tag-raw { background: #374151; color: #9ca3af; border: 1px solid #4b5563; }
+        .tag-semi { background: #854d0e; color: #fde047; border: 1px solid #ca8a04; }
+        .tag-finish { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+        
+        /* RENDU FACTURE (A4) */
+        .paper-preview {
+            display: none; width: 210mm; min-height: 297mm;
+            background-color: #f0e6d2;
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            color: #1a1a1a; font-family: 'Rajdhani', sans-serif;
+            padding: 20mm; box-sizing: border-box; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+        .font-gothic { font-family: 'Metamorphous', cursive; }
+        .font-tech { font-family: 'Rajdhani', sans-serif; }
+        .font-stencil { font-family: 'Black Ops One', cursive; }
+        .font-slogan { font-family: 'Teko', sans-serif; }
+        .font-mono { font-family: 'Share Tech Mono', monospace; }
+        .border-double { border: 4px double #333; padding: 2mm; }
+        .divider-line { height: 2px; background: linear-gradient(90deg, transparent, #333, transparent); margin: 20px 0; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .invoice-table th { background-color: #333; color: #f0e6d2; text-align: left; padding: 8px; font-family: 'Teko'; font-size: 1.2em; text-transform: uppercase; }
+        .invoice-table td { border-bottom: 1px solid #aaa; padding: 8px; }
+
+        /* Navigation */
+        .nav-container { display: flex; gap: 2px; border-bottom: 1px solid #333; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 20px; background: #111; color: #666; cursor: pointer; font-family: 'Teko'; font-size: 1.2rem; text-transform: uppercase; transition: all 0.2s; flex-grow: 1; text-align: center; }
+        .tab-btn:hover { color: #aaa; }
+        .tab-btn.active { background: #1a1a1a; color: #d97706; border-top: 2px solid #d97706; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeEffect 0.3s; }
+        @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
+
+        /* Loading */
+        #loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 999; justify-content: center; align-items: center; color: white; font-family: 'Teko'; font-size: 2em; flex-direction: column; }
+        
+        .checkbox-container { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; background: #222; padding: 5px; border-radius: 4px; }
+        .sortable { cursor: pointer; user-select: none; }
+        .sortable:hover { color: white; }
+
+        /* CERTIFICAT TELETRANSCRIPTION (Invisible mais présent - Format A4) */
+        .certif-preview { 
+            width: 210mm; height: 297mm; 
+            background-color: #e5e7eb; 
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 19px, #d1d5db 20px);
+            border: 2px solid #000; 
+            padding: 25mm; 
+            color: #111;
+            font-family: 'Share Tech Mono', monospace;
+            display: block;
+            position: fixed; 
+            left: -9999px;
+            top: 0;
+            line-height: 1.6;
+        }
+        .certif-header { border-bottom: 3px solid black; padding-bottom: 15px; margin-bottom: 30px; text-align: center; }
+        .certif-stamp { position: absolute; bottom: 30mm; right: 20mm; border: 4px double #b91c1c; color: #b91c1c; padding: 10px 20px; transform: rotate(-10deg); font-weight: bold; font-size: 1.5rem; opacity: 0.8; }
+        .fold-mark { position: absolute; left: 0; width: 5mm; height: 1px; background: #999; }
+        .fold-1 { top: 99mm; }
+        .fold-2 { top: 198mm; }
+    </style>
+</head>
+<body class="p-4">
+    <div id="loader"><div>TRAITEMENT...</div><div class="text-sm text-gray-400 mt-2" id="loader-msg"></div></div>
+
+    <!-- HEADER -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-gray-800 pb-4">
+        <div>
+            <h1 class="text-4xl font-gothic text-amber-700 tracking-tighter" style="text-shadow: 0 0 10px rgba(180, 83, 9, 0.2);">GARAGE MANUFACTORUM</h1>
+            <p class="text-xs text-gray-500 font-mono tracking-widest" id="appVersionDisplay">ERP GPAO v11.7 // FINAL</p>
+        </div>
+        <div class="flex gap-2 flex-wrap justify-end">
+             <button onclick="DataManager.githubSync('pull')" class="btn btn-github text-xs">☁️ Pull</button>
+             <button onclick="DataManager.githubSync('push')" class="btn btn-github text-xs">☁️ Push</button>
+             <div class="w-px bg-gray-700 mx-2"></div>
+             <button onclick="DataManager.exportLocal()" class="btn btn-secondary text-xs">⬇️ Backup</button>
+             <input type="file" id="importInput" hidden onchange="DataManager.importLocal(this)">
+             <button onclick="document.getElementById('importInput').click()" class="btn btn-secondary text-xs">⬆️ Restore</button>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <div class="nav-container">
+        <div class="tab-btn active" id="btn-dashboard" onclick="Router.go('dashboard')">DASHBOARD</div>
+        <div class="tab-btn" id="btn-sales" onclick="Router.go('sales')">VENTES</div>
+        <div class="tab-btn" id="btn-production" onclick="Router.go('production')">ATELIER</div>
+        <div class="tab-btn" id="btn-catalog" onclick="Router.go('catalog')">CATALOGUE</div>
+        <div class="tab-btn" id="btn-stock" onclick="Router.go('stock')">STOCKS</div>
+        <div class="tab-btn" id="btn-history" onclick="Router.go('history')">ARCHIVES</div>
+        <div class="tab-btn" id="btn-config" onclick="Router.go('config')">CONFIG</div>
+    </div>
+
+    <!-- 1. DASHBOARD -->
+    <div id="view-dashboard" class="tab-content active">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="panel text-center border-t-2 border-amber-600 p-4">
+                <div class="text-xs text-gray-500 uppercase">Chiffre d'Affaires</div>
+                <div class="text-3xl font-bold text-amber-500 font-mono" id="dash-ca">0 €</div>
+            </div>
+            <div class="panel text-center border-t-2 border-green-600 p-4">
+                <div class="text-xs text-gray-500 uppercase">Marge Est.</div>
+                <div class="text-3xl font-bold text-green-500 font-mono" id="dash-margin">0 €</div>
+            </div>
+            <div class="panel text-center border-t-2 border-blue-600 p-4">
+                <div class="text-xs text-gray-500 uppercase">Stock Fini</div>
+                <div class="text-3xl font-bold text-blue-400 font-mono" id="dash-stock">0</div>
+            </div>
+            <div class="panel text-center border-t-2 border-red-600 p-4">
+                <div class="text-xs text-gray-500 uppercase">Alertes</div>
+                <div class="text-3xl font-bold text-red-500 font-mono" id="dash-alerts">0</div>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="panel">
+                <h3 class="text-amber-600 font-slogan text-xl mb-4">⏱️ PERF PEINTURE</h3>
+                <canvas id="paintChart" style="max-height: 250px;"></canvas>
+            </div>
+            <div class="panel">
+                <h3 class="text-amber-600 font-slogan text-xl mb-4">🏆 BEST SELLERS</h3>
+                <div id="dash-bestsellers"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. VENTES -->
+    <div id="view-sales" class="tab-content">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 space-y-4">
+                <div class="panel border-t-2 border-amber-600 p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-amber-600 font-slogan text-lg">COMMANDE</h3>
+                        <span id="invNumDisplay" class="font-mono text-amber-500 font-bold text-xs">...</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <input type="date" id="invDate" class="input-dark">
+                        <select id="invPlatform" class="input-dark"></select>
+                        <input type="text" id="invTransId" class="input-dark col-span-2" placeholder="ID Transaction">
+                        <input type="text" id="invPayment" class="input-dark col-span-2" placeholder="Moyen de paiement">
+                    </div>
+                </div>
+                
+                <div class="panel border-t-2 border-amber-600 p-4">
+                    <h3 class="text-amber-600 font-slogan text-lg mb-2">CLIENT</h3>
+                    <input type="text" id="clientPseudo" class="input-dark text-xs mb-2" placeholder="Pseudo Vinted" oninput="Sales.updatePreview()">
+                    <input type="text" id="clientName" class="input-dark text-xs mb-2" placeholder="Nom Réel" oninput="Sales.updatePreview()">
+                    <textarea id="clientAddr" class="input-dark text-xs h-16" placeholder="Adresse complète" oninput="Sales.updatePreview()"></textarea>
+                </div>
+
+                <div class="panel border-t-2 border-amber-600 p-4">
+                    <h3 class="text-amber-600 font-slogan text-lg mb-2">PANIER</h3>
+                    <div class="flex gap-2 mb-2">
+                        <select id="sale-prod-select" class="input-dark flex-grow text-xs"></select>
+                        <button onclick="Sales.addToCart()" class="btn btn-primary text-xs">+</button>
+                    </div>
+                    <div id="sale-cart-list" class="space-y-2 max-h-[300px] overflow-y-auto"></div>
+                    <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center font-bold">
+                        <span>TOTAL</span><span class="text-amber-500" id="cartTotal">0.00 €</span>
+                    </div>
+                    <button onclick="Sales.finalize()" class="btn btn-primary w-full mt-4 py-3 shadow-lg">VALIDER & FACTURER (PDF)</button>
+                </div>
+            </div>
+
+            <!-- Preview PDF (A4) -->
+            <div class="lg:col-span-2 bg-gray-900 p-2 rounded h-[800px] overflow-auto flex justify-center">
+                 <div id="invoice-preview" class="paper-preview" style="display:block; transform: scale(0.60); transform-origin: top center;">
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="w-1/2">
+                            <img id="prev-logo" src="" style="max-height: 80px; display:none; filter: grayscale(100%); opacity: 0.9;">
+                            <h1 class="font-gothic text-4xl m-0 leading-none">GARAGE<br>MANUFACTORUM</h1>
+                            <p class="font-slogan text-lg italic mt-1 text-gray-700">Moins de montage, plus de carnage.</p>
+                        </div>
+                        <div class="w-1/2 text-right">
+                            <div class="border-double inline-block text-left p-4 min-w-[200px]">
+                                <h2 class="font-stencil text-2xl mb-2">FACTURE</h2>
+                                <p class="font-tech"><strong>N° :</strong> <span id="prev-num">...</span></p>
+                                <p class="font-tech"><strong>Date :</strong> <span id="prev-date">...</span></p>
+                                <p class="font-tech text-xs mt-2 text-gray-600">Ref : <span id="prev-ref">...</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mb-8 font-tech text-sm">
+                        <div class="w-5/12">
+                            <h3 class="font-slogan text-xl border-b border-gray-400 mb-2">ÉMETTEUR</h3>
+                            <p id="prev-sender" style="white-space: pre-line;">...</p>
+                        </div>
+                        <div class="w-5/12">
+                            <h3 class="font-slogan text-xl border-b border-gray-400 mb-2">CLIENT</h3>
+                            <p id="prev-client" style="white-space: pre-line; font-weight: bold;">...</p>
+                        </div>
+                    </div>
+                    <table class="invoice-table">
+                        <thead><tr><th>Désignation</th><th class="text-center">Qté</th><th class="text-right">P.U.</th><th class="text-right">Total</th></tr></thead>
+                        <tbody id="prev-rows"></tbody>
+                    </table>
+                    <div class="flex justify-end mt-6">
+                        <div class="w-1/3 text-right">
+                            <p class="font-tech text-sm text-gray-600 mb-1">TVA non applicable (Art. 293 B CGI)</p>
+                            <div class="text-3xl font-stencil border-t-2 border-black pt-2 mt-2">NET : <span id="prev-total">0.00 €</span></div>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-10 left-10 right-10 text-center font-tech text-xs text-gray-500">
+                        <div class="divider-line"></div>
+                        <p id="prev-footer">...</p>
+                        <p class="mt-1 italic">Authenticité vérifiable sur <span id="prev-site-url">...</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. ATELIER -->
+    <div id="view-production" class="tab-content">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="panel border-l-4 border-blue-600">
+                <h3 class="text-xl font-slogan text-blue-500 mb-2">🖨️ IMPRESSION (Semi-Fini)</h3>
+                <div class="space-y-3">
+                    <label class="text-xs text-gray-500">Modèle à imprimer</label>
+                    <select id="prod-print-select" class="input-dark"></select>
+                    <div class="flex gap-2 items-end">
+                        <label class="text-xs text-gray-500 block flex-grow">Quantité <input type="number" id="prod-print-qty" class="input-dark mt-1" value="1"></label>
+                        <button onclick="Production.print()" class="btn btn-primary bg-blue-700 h-9">Lancer</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel border-l-4 border-green-600">
+                <h3 class="text-xl font-slogan text-green-500 mb-2">🎨 PEINTURE (Finition)</h3>
+                <div class="space-y-3">
+                    <label class="text-xs text-gray-500">Modèle à peindre</label>
+                    <select id="prod-paint-select" class="input-dark" onchange="Production.loadSop()"></select>
+                    
+                    <div id="sop-checklist" class="bg-[#111] p-3 rounded border border-gray-700 hidden">
+                        <p class="text-xs font-bold text-gray-400 mb-2">MOD OP & TEMPS</p>
+                        <div id="sop-checks" class="space-y-1 mb-2"></div>
+                        <div class="mt-2 pt-2 border-t border-gray-600">
+                            <label class="text-xs text-amber-500">Temps Total Réel (min)</label>
+                            <input type="number" id="prod-real-time" class="input-dark text-right" value="0">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 items-end">
+                        <label class="text-xs text-gray-500 block flex-grow">Quantité <input type="number" id="prod-paint-qty" class="input-dark mt-1" value="1"></label>
+                        <button onclick="Production.paint()" class="btn btn-primary bg-green-700 h-9">Terminer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. CATALOGUE -->
+    <div id="view-catalog" class="tab-content">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 panel">
+                <div class="flex justify-between mb-4">
+                    <h3 class="text-xl font-slogan text-amber-600">INVENTAIRE</h3>
+                    <button onclick="Catalog.edit(-1)" class="btn btn-primary text-xs">+ Créer</button>
+                </div>
+                <div class="overflow-y-auto max-h-[600px] space-y-2" id="catalog-list"></div>
+            </div>
+            
+            <div class="lg:col-span-2 panel bg-gray-900 border-l-4 border-amber-700" id="product-form" style="display:none;">
+                <h3 class="text-lg font-bold mb-4 text-amber-500">FICHE ARTICLE</h3>
+                <input type="hidden" id="edit-id">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div><label class="text-xs text-gray-500">Type</label><select id="edit-type" class="input-dark" onchange="Catalog.toggleFields()"><option value="raw">Matière Première</option><option value="semi">Semi-Fini (Brut)</option><option value="finish">Produit Fini (Peint)</option></select></div>
+                    <div><label class="text-xs text-gray-500">Nom</label><input id="edit-name" class="input-dark"></div>
+                </div>
+
+                <div id="fields-raw" class="hidden space-y-2">
+                    <div class="grid grid-cols-2 gap-4"><label class="text-xs text-gray-500 block">Coût Achat<input type="number" id="edit-cost" class="input-dark"></label><label class="text-xs text-gray-500 block">Stock Sécurité<input type="number" id="edit-safety" class="input-dark"></label></div>
+                    <label class="text-xs text-gray-500 block">Lien Fournisseur <input id="edit-link-buy" class="input-dark"></label>
+                </div>
+                
+                <div id="fields-prod" class="hidden space-y-3">
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="text-xs text-gray-500 block">Poids (g) <input type="number" id="edit-weight" class="input-dark"></label>
+                        <label class="text-xs text-gray-500 block">Prix Vente <input type="number" id="edit-price" class="input-dark"></label>
+                        <label class="text-xs text-gray-500 block">Stock Sécurité <input type="number" id="edit-safety-prod" class="input-dark"></label>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="text-xs text-gray-500 block">Lien STL <input id="edit-link-stl" class="input-dark"></label>
+                        <label class="text-xs text-gray-500 block">Lien Photo <input id="edit-link-photo" class="input-dark"></label>
+                    </div>
+                    <div class="bg-black p-3 rounded border border-gray-700">
+                        <h4 class="text-xs font-bold text-gray-400 mb-2">NOMENCLATURE</h4>
+                        <div id="bom-list" class="space-y-2 mb-2"></div>
+                        <div class="flex gap-2">
+                            <select id="bom-add-select" class="input-dark text-xs"></select>
+                            <input type="number" id="bom-add-qty" class="input-dark w-16 text-xs" placeholder="Qté">
+                            <button onclick="Catalog.addBomItem()" class="btn btn-secondary text-xs">+</button>
+                        </div>
+                    </div>
+                    <div id="section-sop" class="bg-black p-3 rounded border border-gray-700 hidden">
+                        <h4 class="text-xs font-bold text-gray-400 mb-2">MOD OP PEINTURE</h4>
+                        <div id="sop-list" class="space-y-2 mb-2"></div>
+                        <div class="flex gap-2">
+                            <input type="text" id="sop-add-desc" class="input-dark text-xs" placeholder="Étape">
+                            <input type="number" id="sop-add-time" class="input-dark w-16 text-xs" placeholder="Min">
+                            <button onclick="Catalog.addSopItem()" class="btn btn-secondary text-xs">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-4 pt-4 border-t border-gray-700">
+                    <button onclick="Catalog.save()" class="btn btn-success flex-grow">Sauvegarder</button>
+                    <button onclick="Catalog.deleteItem()" class="btn btn-danger">Supprimer</button>
+                    <button onclick="document.getElementById('product-form').style.display='none'" class="btn btn-secondary">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. STOCKS -->
+    <div id="view-stock" class="tab-content">
+        <div class="panel">
+            <div class="flex justify-between mb-4">
+                <h3 class="text-xl font-slogan text-amber-600">ÉTAT DES STOCKS</h3>
+                <input type="text" id="stock-search" class="input-dark w-64" placeholder="Rechercher..." onkeyup="Stocks.render()">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-[#111] text-gray-500 font-mono">
+                        <tr>
+                            <th class="p-3">Type</th>
+                            <th class="sortable" onclick="Stocks.sort('name')">Nom ↕</th>
+                            <th class="text-center sortable" onclick="Stocks.sort('stock')">Stock ↕</th>
+                            <th class="text-center">Sécurité</th>
+                            <th>État</th>
+                            <th>Lien</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. ARCHIVES -->
+    <div id="view-history" class="tab-content">
+        <div class="panel">
+            <h2 class="text-xl mb-4 text-amber-600 font-slogan">ARCHIVES</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-400">
+                    <thead class="bg-[#222] text-amber-600">
+                        <tr><th>N°</th><th>Date</th><th>Client</th><th>Total</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="history-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 7. CONFIG -->
+    <div id="view-config" class="tab-content">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="panel">
+                <h2 class="text-xl mb-4 text-amber-600 font-slogan">IDENTITÉ</h2>
+                <div class="space-y-2">
+                    <label>Nom <input id="cfg-name" class="input-dark"></label>
+                    <label>Adresse <textarea id="cfg-addr" class="input-dark"></textarea></label>
+                    <label>SIRET <input id="cfg-siret" class="input-dark"></label>
+                    <label>Site Web (URL Manifeste) <input id="cfg-site" class="input-dark"></label>
+                    <div class="pt-2"><label>Logo <input type="file" onchange="Config.handleLogo(this)"></label></div>
+                </div>
+            </div>
+            <div class="panel">
+                <h2 class="text-xl mb-4 text-amber-600 font-slogan">CLOUD GITHUB</h2>
+                <div class="space-y-2">
+                    <label>User <input id="cfg-gh-user" class="input-dark"></label>
+                    <label>Repo <input id="cfg-gh-repo" class="input-dark"></label>
+                    <label>Token <input id="cfg-gh-token" type="password" class="input-dark"></label>
+                    <label>Chemin Certifs <input id="cfg-gh-path" class="input-dark" value="certificats/"></label>
+                    <button onclick="DataManager.testConnection()" class="btn btn-secondary w-full mt-2">TESTER GITHUB</button>
+                </div>
+            </div>
+             <div class="panel md:col-span-2">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h2 class="text-xl mb-2 text-amber-600 font-slogan">BOUTIQUES</h2>
+                        <div id="cfg-shops-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                        <div class="flex gap-2 mt-2">
+                            <input id="new-shop-name" class="input-dark w-1/3" placeholder="Nom">
+                            <input id="new-shop-url" class="input-dark flex-grow" placeholder="URL">
+                            <button onclick="Config.addShop()" class="btn btn-secondary">+</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl mb-2 text-amber-600 font-slogan">TEXTE CERTIFICAT</h2>
+                        <textarea id="cfg-certif-text" class="input-dark h-20"></textarea>
+                        <label class="text-xs text-gray-500 mt-2 block">ID Vidéo Youtube (Optionnel)</label>
+                        <input id="cfg-yt-id" class="input-dark" placeholder="ex: dQw4w9WgXcQ">
+                        <label class="text-xs text-gray-500 mt-2 block">Lien Instagram</label>
+                        <input id="cfg-insta" class="input-dark" placeholder="https://instagram.com/...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button onclick="Config.save()" class="btn btn-primary w-full mt-4">SAUVEGARDER CONFIG</button>
+    </div>
+
+    <!-- TEMPLATE CERTIFICAT (A4 - DL Fold Ready) -->
+    <div id="certif-template" class="certif-preview">
+        <!-- HEADER -->
+        <div class="certif-header">
+            <h2 style="font-size: 3em; letter-spacing: 4px; font-family: 'Black Ops One'; margin-bottom: 5px;">/// TELE-TRANSCRIPTION ///</h2>
+            <p style="font-size: 1.2em; letter-spacing: 2px; color: #333;">REF: AUTH-SIGMA-9 // CHANNEL SECURE</p>
+        </div>
+        
+        <!-- BODY -->
+        <div style="text-align: left; margin-top: 50px; font-size: 1.3em; font-family: 'Share Tech Mono'; padding: 0 10mm;">
+            <!-- Zone Haute (Visible après 1er pli) -->
+            <p><strong>ORIGINE :</strong> FORGE Y-01 [GARAGE MANUFACTORUM]</p>
+            <p><strong>DATE :</strong> <span id="ctf-date">...</span></p>
+            <p><strong>DESTINATAIRE :</strong> <span id="ctf-client">...</span></p>
+            
+            <div class="divider-line" style="background: black; height: 2px; margin: 30px 0;"></div>
+            
+            <p id="ctf-text" class="mt-8 mb-8" style="font-style: italic;">...</p>
+            
+            <!-- Zone Centrale (Détails) -->
+            <div style="border: 3px double #333; padding: 20px; margin: 20px 0; background: rgba(0,0,0,0.05);">
+                <p>> <strong>MODÈLE :</strong> <span id="ctf-model" style="font-weight: bold;">...</span></p>
+                <p class="mt-2">> <strong>ID NFC :</strong> <span id="ctf-nfc" style="font-family: 'Courier New', monospace; font-weight:bold; letter-spacing: 2px;">...</span></p>
+            </div>
+            
+            <div id="ctf-shops" style="font-size: 0.8em; margin-top: 40px; color: #555; text-align: center;"></div>
+            
+            <p style="text-align: center; margin-top:10px; font-weight: bold; font-size: 1.2em;">
+                <span id="ctf-site">...</span>
+            </p>
+        </div>
+
+        <!-- STAMP & FOOTER -->
+        <div class="certif-stamp" style="transform: rotate(-12deg); border: 6px solid #8B0000; color: #8B0000; font-family: 'Black Ops One'; opacity: 0.8; font-size: 2em; padding: 15px 30px;">
+            SANCTIFIED<br>BY THE<br>GARAGE
+        </div>
+        
+        <div style="position: absolute; bottom: 15mm; left: 0; right: 0; text-align: center; font-size: 0.9em; color: #555; letter-spacing: 1px;">
+            GLOIRE À LA MACHINE. FIN DE TRANSMISSION.
+        </div>
+        
+        <!-- Pliage Marks -->
+        <div class="fold-mark fold-1"></div>
+        <div class="fold-mark fold-2"></div>
+    </div>
+
+    <script>
+        const DB = {
+            data: {
+                config: { name: "", address: "", siret: "", logo: "", certifText: "Certifié conforme.", youtubeId: "", instaUrl: "", shops: [], siteUrl:"", ghUser:"", ghRepo:"", ghToken:"", ghPath:"certificats/" },
+                products: [], 
+                sales: [],
+                productionLog: [] 
+            },
+            init() {
+                const saved = localStorage.getItem('gm_v11');
+                if (saved) this.data = JSON.parse(saved);
+                else this.seed();
+                // Patch old configs
+                if(!this.data.config.youtubeId) this.data.config.youtubeId = "";
+                if(!this.data.config.instaUrl) this.data.config.instaUrl = "";
+            },
+            seed() {
+                this.data.config.name = "Garage Manufactorum (EI)";
+                this.data.products = [
+                    { id: 1, type: 'raw', name: 'PLA Gris', stock: 1000, safety: 200, cost: 20, buyLink: 'https://amazon.fr' },
+                    { id: 2, type: 'semi', name: 'Ruine (Brut)', stock: 2, safety: 2, weight: 200, bom:[{id:1, qty:200}], link:'STL' },
+                    { id: 3, type: 'finish', name: 'Ruine (Peinte)', stock: 1, safety: 1, price: 45, bom:[{id:2, qty:1}], sop:[{step:"Sous-couche", time:5}, {step:"Brossage", time:10}] }
+                ];
+                this.data.config.shops = [{name:"Vinted", url:"https://vinted.fr"}];
+            },
+            save() { localStorage.setItem('gm_v11', JSON.stringify(this.data)); },
+            get(id) { return this.data.products.find(p => p.id == id); }
+        };
+
+        const Router = {
+            go(id) {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                
+                const view = document.getElementById('view-'+id);
+                const btn = document.getElementById('btn-'+id);
+                if(view) view.classList.add('active');
+                if(btn) btn.classList.add('active');
+                
+                if(id === 'catalog') Catalog.render();
+                if(id === 'stock') Stocks.render();
+                if(id === 'production') Production.render();
+                if(id === 'sales') Sales.init();
+                if(id === 'dashboard') Dashboard.render();
+                if(id === 'history') History.render();
+                if(id === 'config') Config.init();
+            }
+        };
+
+        const WebGen = {
+            generate(item, client, date, nfc) {
+                const conf = DB.data.config;
+                return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AUTH-SIGMA-9 // ${conf.name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050505;--main:#d97706;--scan:rgba(0,0,0,0.5);}
+body{background:var(--bg);color:var(--main);font-family:'Share Tech Mono',monospace;margin:0;padding:20px;text-transform:uppercase;}
+.container{max-width:600px;margin:0 auto;border:2px solid var(--main);padding:20px;box-shadow:0 0 15px #78350f;}
+h1{font-family:'Black Ops One';font-size:2.5rem;text-align:center;margin:0;text-shadow:0 0 10px var(--main);}
+.subtitle{text-align:center;font-size:0.8rem;letter-spacing:2px;opacity:0.8;margin-bottom:20px;}
+.data-block{background:rgba(217,119,6,0.1);border-left:4px solid var(--main);padding:15px;margin-bottom:20px;}
+.label{font-size:0.7rem;color:#aaa;} .value{font-size:1.2rem;font-weight:bold;margin-bottom:10px;}
+.btn{display:block;background:transparent;border:1px solid var(--main);color:var(--main);padding:15px;text-align:center;text-decoration:none;font-weight:bold;margin-bottom:10px;}
+.btn:hover{background:var(--main);color:#000;}
+</style>
+</head>
+<body>
+<div class="container">
+<header><div class="subtitle">/// TRANSMISSION ENTRANTE ///</div><h1>${conf.name}</h1></header>
+<div class="data-block">
+<div class="label">IDENTIFICATION :</div><div class="value">${item}</div>
+<div class="label">PROPRIÉTAIRE :</div><div class="value">${client}</div>
+<div class="label">DATE :</div><div class="value">${date}</div>
+<div class="label">ID NFC :</div><div class="value">${nfc}</div>
+<p style="font-size:0.8em;margin-top:10px;">${conf.certifText}</p>
+</div>
+${conf.youtubeId ? `<iframe style="width:100%;height:300px;border:1px solid var(--main);margin-bottom:20px;" src="https://www.youtube.com/embed/${conf.youtubeId}" frameborder="0" allowfullscreen></iframe>` : ''}
+<div class="actions">
+${conf.shops.map(s => `<a href="${s.url}" class="btn">🛒 ${s.name}</a>`).join('')}
+${conf.instaUrl ? `<a href="${conf.instaUrl}" class="btn">📷 INSTAGRAM</a>` : ''}
+</div>
+<footer style="text-align:center;font-size:0.6rem;color:#555;margin-top:30px;">GLOIRE À LA MACHINE.</footer>
+</div></body></html>`;
+            }
+        };
+
+        const PDFGen = {
+            async invoice(elId, name) {
+                const { jsPDF } = window.jspdf;
+                const el = document.getElementById(elId);
+                if(!el) return;
+                el.style.display = 'block';
+                const cvs = await html2canvas(el, {scale:2});
+                // Do NOT hide invoice preview, it is part of the UI
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.addImage(cvs.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
+                pdf.save(name+'.pdf');
+            },
+            async certif(model, client, date, nfc, seq) {
+                const { jsPDF } = window.jspdf;
+                document.getElementById('ctf-model').innerText = model;
+                document.getElementById('ctf-client').innerText = client;
+                document.getElementById('ctf-date').innerText = date;
+                document.getElementById('ctf-nfc').innerText = nfc || "---";
+                document.getElementById('ctf-text').innerText = DB.data.config.certifText;
+                document.getElementById('ctf-site').innerText = DB.data.config.siteUrl;
+                document.getElementById('ctf-shops').innerText = DB.data.config.shops.map(s=>s.name).join(' • ');
+
+                const el = document.getElementById('certif-template');
+                // Temporarily move into view for capture if needed, or use fixed off-screen (which html2canvas supports)
+                const cvs = await html2canvas(el, {scale:2});
+                
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.addImage(cvs.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
+                pdf.save(`Certif_${model}_${seq}.pdf`);
+            }
+        };
+
+        const Catalog = {
+            editingId: null,
+            render() {
+                const div = document.getElementById('catalog-list');
+                if(!div) return;
+                div.innerHTML = '';
+                DB.data.products.forEach(p => {
+                    let badge = p.type=='raw'?'MAT':(p.type=='semi'?'SEMI':'FINI');
+                    let css = p.type=='raw'?'tag-raw':(p.type=='semi'?'tag-semi':'tag-finish');
+                    div.innerHTML += `
+                        <div class="flex justify-between items-center bg-[#222] p-2 rounded mb-2 border-l-4 border-${p.type=='raw'?'gray':(p.type=='semi'?'amber':'green')}-600">
+                            <div class="flex items-center gap-2">
+                                <span class="stock-tag ${css}">${badge}</span>
+                                <span class="font-bold">${p.name}</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="Catalog.edit(${p.id})" class="btn btn-secondary text-xs">Éditer</button>
+                                <button onclick="Catalog.del(${p.id})" class="text-red-500 text-xs">X</button>
+                            </div>
+                        </div>`;
+                });
+            },
+            edit(id) {
+                this.editingId = id;
+                document.getElementById('product-form').style.display = 'block';
+                
+                document.getElementById('edit-name').value = "";
+                document.getElementById('bom-list').innerHTML = "";
+                document.getElementById('sop-list').innerHTML = "";
+                
+                let p = { type: 'raw', bom:[], sop:[] };
+                if (id !== -1) p = DB.get(id);
+
+                document.getElementById('edit-type').value = p.type;
+                document.getElementById('edit-name').value = p.name || "";
+                
+                if(p.type === 'raw') {
+                    document.getElementById('edit-cost').value = p.cost || 0;
+                    document.getElementById('edit-safety').value = p.safety || 0;
+                    document.getElementById('edit-link-buy').value = p.buyLink || "";
+                } else {
+                    document.getElementById('edit-weight').value = p.weight || 0;
+                    document.getElementById('edit-price').value = p.price || 0;
+                    document.getElementById('edit-safety-prod').value = p.safety || 0;
+                    document.getElementById('edit-link-stl').value = p.link || "";
+                    document.getElementById('edit-link-photo').value = p.photo || "";
+                    this.renderBom(p.bom || []);
+                    if(p.type === 'finish') this.renderSop(p.sop || []);
+                }
+                this.toggleFields();
+                this.updateBomSelect();
+            },
+            toggleFields() {
+                const t = document.getElementById('edit-type').value;
+                document.getElementById('fields-raw').classList.toggle('hidden', t !== 'raw');
+                document.getElementById('fields-prod').classList.toggle('hidden', t === 'raw');
+                document.getElementById('section-sop').classList.toggle('hidden', t !== 'finish');
+            },
+            updateBomSelect() {
+                const sel = document.getElementById('bom-add-select');
+                sel.innerHTML = '';
+                DB.data.products.forEach(p => sel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+            },
+            renderBom(bom) {
+                const div = document.getElementById('bom-list');
+                div.innerHTML = '';
+                bom.forEach((b) => {
+                    let p = DB.get(b.id);
+                    div.innerHTML += `<div class="flex justify-between text-xs bg-[#333] p-1 rounded" data-id="${b.id}" data-qty="${b.qty}"><span>${p ? p.name : '?'}</span><span>x ${b.qty}</span><span onclick="this.parentElement.remove()" class="cursor-pointer text-red-500">x</span></div>`;
+                });
+            },
+            renderSop(sop) {
+                const div = document.getElementById('sop-list');
+                div.innerHTML = '';
+                sop.forEach((s) => {
+                    div.innerHTML += `<div class="flex justify-between text-xs bg-[#333] p-1 rounded" data-step="${s.step}" data-time="${s.time}"><span>${s.step}</span><span>${s.time}m</span><span onclick="this.parentElement.remove()" class="cursor-pointer text-red-500">x</span></div>`;
+                });
+            },
+            addBomItem() {
+                const id = parseInt(document.getElementById('bom-add-select').value);
+                const qty = parseFloat(document.getElementById('bom-add-qty').value);
+                if(id && qty) {
+                    const div = document.getElementById('bom-list');
+                    const p = DB.get(id);
+                    div.innerHTML += `<div class="flex justify-between text-xs bg-[#333] p-1 rounded" data-id="${id}" data-qty="${qty}"><span>${p.name}</span><span>x ${qty}</span><span onclick="this.parentElement.remove()" class="cursor-pointer text-red-500">x</span></div>`;
+                }
+            },
+            addSopItem() {
+                const step = document.getElementById('sop-add-desc').value;
+                const time = parseInt(document.getElementById('sop-add-time').value);
+                if(step && time) {
+                    const div = document.getElementById('sop-list');
+                    div.innerHTML += `<div class="flex justify-between text-xs bg-[#333] p-1 rounded" data-step="${step}" data-time="${time}"><span>${step}</span><span>${time}m</span><span onclick="this.parentElement.remove()" class="cursor-pointer text-red-500">x</span></div>`;
+                }
+            },
+            save() {
+                const type = document.getElementById('edit-type').value;
+                let p = this.editingId === -1 ? { id: Date.now(), stock: 0 } : DB.get(this.editingId);
+                p.type = type;
+                p.name = document.getElementById('edit-name').value;
+                if(type === 'raw') {
+                    p.cost = parseFloat(document.getElementById('edit-cost').value);
+                    p.safety = parseInt(document.getElementById('edit-safety').value);
+                    p.buyLink = document.getElementById('edit-link-buy').value;
+                } else {
+                    p.weight = parseFloat(document.getElementById('edit-weight').value);
+                    p.price = parseFloat(document.getElementById('edit-price').value);
+                    p.safety = parseInt(document.getElementById('edit-safety-prod').value);
+                    p.link = document.getElementById('edit-link-stl').value;
+                    p.photo = document.getElementById('edit-link-photo').value;
+                    p.bom = [];
+                    document.querySelectorAll('#bom-list > div').forEach(el => p.bom.push({ id: parseInt(el.dataset.id), qty: parseFloat(el.dataset.qty) }));
+                    if(type === 'finish') {
+                        p.sop = [];
+                        document.querySelectorAll('#sop-list > div').forEach(el => p.sop.push({ step: el.dataset.step, time: parseInt(el.dataset.time) }));
+                    }
+                }
+                if(this.editingId === -1) DB.data.products.push(p);
+                DB.save();
+                document.getElementById('product-form').style.display = 'none';
+                this.render();
+            },
+            del(id) { if(confirm("Supprimer ?")) { DB.data.products = DB.data.products.filter(p=>p.id!=id); DB.save(); this.render(); } }
+        };
+
+        const Stocks = {
+            sortKey: 'name', sortAsc: true,
+            render() {
+                const term = document.getElementById('stock-search').value.toLowerCase();
+                const tbody = document.getElementById('stock-table-body');
+                if(!tbody) return;
+                tbody.innerHTML = '';
+                let list = DB.data.products.filter(p => p.name.toLowerCase().includes(term));
+                list.sort((a,b) => {
+                    let valA = a[this.sortKey], valB = b[this.sortKey];
+                    if(typeof valA==='string') valA=valA.toLowerCase(); if(typeof valB==='string') valB=valB.toLowerCase();
+                    return (valA<valB ? -1 : 1) * (this.sortAsc ? 1 : -1);
+                });
+                list.forEach(p => {
+                    let status = p.stock <= (p.safety||0) ? '<span class="text-red-500 font-bold">⚠️ BAS</span>' : '<span class="text-green-500">OK</span>';
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-800">
+                            <td>${p.type}</td><td class="font-bold">${p.name}</td>
+                            <td class="text-center"><input type="number" value="${p.stock}" class="input-dark w-16 text-center" onchange="Stocks.update(${p.id}, this.value)"></td>
+                            <td class="text-center text-gray-500">${p.safety||0}</td><td class="text-center">${status}</td>
+                            <td class="text-xs text-blue-400 cursor-pointer" onclick="window.open('${p.link||p.buyLink}')">Link</td>
+                        </tr>`;
+                });
+            },
+            update(id, val) { DB.get(id).stock = parseFloat(val); DB.save(); },
+            sort(key) {
+                if(this.sortKey === key) this.sortAsc = !this.sortAsc;
+                else { this.sortKey = key; this.sortAsc = true; }
+                this.render();
+            }
+        };
+
+        const Production = {
+            render() {
+                const printSel = document.getElementById('prod-print-select');
+                const paintSel = document.getElementById('prod-paint-select');
+                if(!printSel || !paintSel) return;
+
+                printSel.innerHTML = paintSel.innerHTML = '<option value="">-- Choisir --</option>';
+                DB.data.products.forEach(p => {
+                    if(p.type === 'semi') printSel.innerHTML += `<option value="${p.id}">${p.name} (Stock: ${p.stock})</option>`;
+                    if(p.type === 'finish') {
+                        // Find semi used in BOM
+                        let semiStock = '?';
+                        if(p.bom && p.bom.length>0) {
+                            const semiId = p.bom.find(b => DB.get(b.id).type === 'semi')?.id;
+                            if(semiId) semiStock = DB.get(semiId).stock;
+                        }
+                        paintSel.innerHTML += `<option value="${p.id}">${p.name} (Brut dispo: ${semiStock})</option>`;
+                    }
+                });
+            },
+            loadSop() {
+                const id = document.getElementById('prod-paint-select').value;
+                if(!id) return;
+                const p = DB.get(id);
+                const div = document.getElementById('sop-checks');
+                const cont = document.getElementById('sop-checklist');
+                if(p && p.sop && p.sop.length > 0) {
+                    cont.classList.remove('hidden');
+                    div.innerHTML = '';
+                    let totalTime = 0;
+                    p.sop.forEach(s => {
+                        totalTime += s.time;
+                        div.innerHTML += `<label class="checkbox-container"><input type="checkbox"> <span class="text-xs">${s.step} (${s.time}m)</span></label>`;
+                    });
+                    document.getElementById('prod-real-time').value = totalTime; 
+                } else { cont.classList.add('hidden'); }
+            },
+            print() {
+                const id = document.getElementById('prod-print-select').value;
+                const qty = parseInt(document.getElementById('prod-print-qty').value);
+                if(!id) return;
+                const p = DB.get(id);
+                if(p.bom) p.bom.forEach(b => DB.get(b.id).stock -= (b.qty * qty));
+                p.stock += qty;
+                DB.save(); alert(`Production OK`); this.render();
+            },
+            paint() {
+                const id = document.getElementById('prod-paint-select').value;
+                const qty = parseInt(document.getElementById('prod-paint-qty').value);
+                if(!id) return;
+                const p = DB.get(id);
+                if(p.bom) p.bom.forEach(b => DB.get(b.id).stock -= (b.qty * qty));
+                p.stock += qty;
+                const real = parseInt(document.getElementById('prod-real-time').value) / qty;
+                const theo = p.sop ? p.sop.reduce((a,b)=>a+b.time,0) : 0;
+                DB.data.productionLog.push({ date: new Date().toISOString(), item: p.name, real, theo });
+                DB.save(); alert(`Finition OK`); this.render();
+            }
+        };
+
+        const Sales = {
+            cart: [],
+            init() {
+                const sel = document.getElementById('sale-prod-select');
+                const plat = document.getElementById('invPlatform');
+                if(!sel || !plat) return;
+
+                sel.innerHTML = '<option value="">-- Article --</option>';
+                DB.data.products.forEach(p => {
+                    if(p.type === 'semi' || p.type === 'finish') sel.innerHTML += `<option value="${p.id}">${p.name} (Stock: ${p.stock}) - ${p.price}€</option>`;
+                });
+                plat.innerHTML = '';
+                DB.data.config.shops.forEach(s => plat.innerHTML += `<option value="${s.name}">${s.name}</option>`);
+                plat.innerHTML += `<option value="Direct">Direct / Main propre</option>`;
+                
+                const next = DB.data.sales.length + 1;
+                document.getElementById('invNumDisplay').innerText = `F2025-${String(next).padStart(3,'0')}`;
+                document.getElementById('invDate').valueAsDate = new Date();
+                this.updatePreview();
+            },
+            addToCart() {
+                const id = document.getElementById('sale-prod-select').value;
+                if(!id) return;
+                const p = DB.get(id);
+                this.cart.push({ id: p.id, name: p.name, price: p.price, qty: 1, nfcs: [""] });
+                this.renderCart();
+                this.updatePreview();
+            },
+            renderCart() {
+                const div = document.getElementById('sale-cart-list');
+                if(!div) return;
+                div.innerHTML = '';
+                let total = 0;
+                this.cart.forEach((item, i) => {
+                    total += item.price * item.qty;
+                    let nfcs = '';
+                    for(let k=0; k<item.qty; k++) nfcs += `<input class="input-dark text-xs mt-1" placeholder="NFC ID #${k+1}" value="${item.nfcs[k]||''}" oninput="Sales.cart[${i}].nfcs[${k}]=this.value">`;
+                    div.innerHTML += `
+                        <div class="bg-[#222] p-2 rounded mb-2 border border-gray-700">
+                            <div class="flex justify-between"><span>${item.name}</span><span>${item.price}€</span></div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs">Qté</span><input type="number" value="${item.qty}" class="input-dark w-12 text-center" onchange="Sales.updateQty(${i}, this.value)">
+                                <button onclick="Sales.remove(${i})" class="text-red-500 text-xs">Sup</button>
+                            </div>
+                            <div class="mt-2 pl-2 border-l-2 border-blue-800">${nfcs}</div>
+                        </div>`;
+                });
+                document.getElementById('cartTotal').innerText = total.toFixed(2) + " €";
+            },
+            updateQty(i, v) { 
+                let q = parseInt(v) || 1; this.cart[i].qty = q;
+                while(this.cart[i].nfcs.length < q) this.cart[i].nfcs.push("");
+                this.renderCart(); this.updatePreview();
+            },
+            remove(i) { this.cart.splice(i, 1); this.renderCart(); this.updatePreview(); },
+            
+            updatePreview() {
+                const getId = (id) => document.getElementById(id);
+                if(!getId('prev-num')) return; 
+
+                getId('prev-num').innerText = getId('invNumDisplay').innerText;
+                getId('prev-date').innerText = getId('invDate').value;
+                getId('prev-ref').innerText = getId('invTransId').value;
+                
+                getId('prev-sender').innerText = `${DB.data.config.name}\n${DB.data.config.address}\nSIRET: ${DB.data.config.siret}`;
+                getId('prev-client').innerText = `${getId('clientName').value} (${getId('clientPseudo').value})\n${getId('clientAddr').value}`;
+                
+                getId('prev-footer').innerText = DB.data.config.shops.map(s => s.url).join(' | ');
+                getId('prev-site-url').innerText = DB.data.config.siteUrl;
+
+                const tbody = document.getElementById('prev-rows');
+                tbody.innerHTML = '';
+                this.cart.forEach(c => {
+                    tbody.innerHTML += `<tr><td>${c.name}</td><td class="text-center">${c.qty}</td><td class="text-right">${c.price.toFixed(2)}</td><td class="text-right">${(c.price*c.qty).toFixed(2)} €</td></tr>`;
+                });
+                getId('prev-total').innerText = document.getElementById('cartTotal').innerText;
+                
+                if(DB.data.config.logo) { document.getElementById('prev-logo').src = DB.data.config.logo; document.getElementById('prev-logo').style.display='block'; }
+            },
+
+            async finalize() {
+                if(this.cart.length === 0) return;
+                this.cart.forEach(c => { const p = DB.get(c.id); p.stock -= c.qty; });
+                
+                const sale = {
+                    id: document.getElementById('invNumDisplay').innerText,
+                    date: document.getElementById('invDate').value,
+                    client: document.getElementById('clientName').value,
+                    platform: document.getElementById('invPlatform').value,
+                    total: parseFloat(document.getElementById('cartTotal').innerText),
+                    items: this.cart
+                };
+                DB.data.sales.push(sale);
+                DB.save();
+                
+                const { jsPDF } = window.jspdf;
+                await PDFGen.invoice('invoice-preview', sale.id);
+                
+                if(confirm("Générer les certificats ?")) {
+                    for(const item of this.cart) {
+                        for(let u=0; u<item.qty; u++) {
+                            const htmlContent = WebGen.generate(item.name, sale.client, sale.date, item.nfcs[u]);
+                            const fileName = `Certif_${sale.id}_${item.name.replace(/\s+/g,'_')}_${u+1}.html`;
+                            DataManager.uploadCertif(fileName, btoa(unescape(encodeURIComponent(htmlContent))));
+                        }
+                    }
+                }
+                this.cart = [];
+                this.renderCart();
+                this.init();
+            },
+            
+            load(id) {
+                const s = DB.data.sales.find(x => x.id === id);
+                if(!s) return;
+                document.getElementById('invNumDisplay').innerText = s.id;
+                document.getElementById('clientName').value = s.client;
+                this.cart = JSON.parse(JSON.stringify(s.items));
+                this.renderCart();
+                this.updatePreview(); 
+                Router.go('sales');
+            }
+        };
+
+        const Dashboard = {
+            render() {
+                const ca = DB.data.sales.reduce((a,b) => a + b.total, 0);
+                document.getElementById('dash-ca').innerText = ca.toFixed(2) + ' €';
+                
+                let alerts = 0;
+                DB.data.products.forEach(p => { if(p.stock <= (p.safety||0)) alerts++; });
+                document.getElementById('dash-alerts').innerText = alerts;
+                
+                const canvas = document.getElementById('paintChart');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    if(window.myChart) window.myChart.destroy();
+                    const logs = DB.data.productionLog.slice(-10);
+                    window.myChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: logs.map(l => l.item),
+                            datasets: [
+                                { label: 'Réel (min)', data: logs.map(l => l.real), backgroundColor: '#d97706' },
+                                { label: 'Théorique (min)', data: logs.map(l => l.theo), backgroundColor: '#10b981' }
+                            ]
+                        },
+                        options: { responsive: true }
+                    });
+                }
+                
+                const sugg = document.getElementById('dash-suggestions');
+                if(sugg) {
+                    sugg.innerHTML = '';
+                    DB.data.products.forEach(p => {
+                        if(p.stock <= (p.safety||0)) {
+                            let action = p.type === 'raw' ? 'ACHETER' : (p.type === 'semi' ? 'IMPRIMER' : 'PEINDRE');
+                            sugg.innerHTML += `<div class="p-2 border border-red-800 bg-red-900/20 text-red-400 rounded">⚠️ ${action} : ${p.name} (Stock ${p.stock}/${p.safety})</div>`;
+                        }
+                    });
+                }
+            }
+        };
+        
+        const History = {
+            render() {
+                const tbody = document.getElementById('history-list');
+                if(!tbody) return;
+                tbody.innerHTML = '';
+                [...DB.data.sales].reverse().forEach(s => {
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-800">
+                            <td>${s.id}</td><td>${s.date}</td><td>${s.client}</td><td>${s.total} €</td>
+                            <td>
+                                <button onclick="Sales.load('${s.id}')" class="btn btn-secondary text-xs">Revoir</button>
+                                <button onclick="DataManager.pushCloudCertifs('${s.id}')" class="btn btn-primary text-xs bg-blue-700">☁️ CLOUD CERTIFS</button>
+                            </td>
+                        </tr>`;
+                });
+            }
+        };
+
+        const Config = {
+            init() {
+                document.getElementById('cfg-name').value = DB.data.config.name;
+                document.getElementById('cfg-addr').value = DB.data.config.address;
+                document.getElementById('cfg-siret').value = DB.data.config.siret;
+                document.getElementById('cfg-site').value = DB.data.config.siteUrl;
+                document.getElementById('cfg-gh-user').value = DB.data.config.ghUser;
+                document.getElementById('cfg-gh-repo').value = DB.data.config.ghRepo;
+                document.getElementById('cfg-gh-token').value = DB.data.config.ghToken;
+                document.getElementById('cfg-certif-text').value = DB.data.config.certifText;
+                document.getElementById('cfg-yt-id').value = DB.data.config.youtubeId || "";
+                document.getElementById('cfg-insta').value = DB.data.config.instaUrl || "";
+                
+                if(DB.data.config.logo) document.getElementById('prev-logo').src = DB.data.config.logo;
+                this.renderShops();
+            },
+            renderShops() {
+                const div = document.getElementById('cfg-shops-list');
+                div.innerHTML = '';
+                DB.data.config.shops.forEach((s, i) => {
+                    div.innerHTML += `<div class="flex justify-between bg-[#222] p-2 rounded mb-1"><span>${s.name}</span><span class="text-xs text-blue-400 truncate w-32">${s.url}</span><span onclick="DB.data.config.shops.splice(${i},1); Config.init()" class="cursor-pointer text-red-500">x</span></div>`;
+                });
+            },
+            addShop() {
+                DB.data.config.shops.push({ name: document.getElementById('new-shop-name').value, url: document.getElementById('new-shop-url').value });
+                this.init();
+            },
+            save() {
+                DB.data.config.name = document.getElementById('cfg-name').value;
+                DB.data.config.address = document.getElementById('cfg-addr').value;
+                DB.data.config.siret = document.getElementById('cfg-siret').value;
+                DB.data.config.siteUrl = document.getElementById('cfg-site').value;
+                DB.data.config.certifText = document.getElementById('cfg-certif-text').value;
+                DB.data.config.ghUser = document.getElementById('cfg-gh-user').value;
+                DB.data.config.ghRepo = document.getElementById('cfg-gh-repo').value;
+                DB.data.config.ghToken = document.getElementById('cfg-gh-token').value;
+                DB.data.config.youtubeId = document.getElementById('cfg-yt-id').value;
+                DB.data.config.instaUrl = document.getElementById('cfg-insta').value;
+                DB.save(); alert("Config Saved");
+            },
+            handleLogo(input) {
+                const r = new FileReader();
+                r.onload = e => { DB.data.config.logo = e.target.result; DB.save(); document.getElementById('prev-logo').src = e.target.result; };
+                r.readAsDataURL(input.files[0]);
+            }
+        };
+
+        const DataManager = {
+            async testConnection() {
+                const { ghUser, ghRepo, ghToken } = DB.data.config;
+                try {
+                    const r = await fetch(`https://api.github.com/repos/${ghUser}/${ghRepo}`, { headers: { Authorization: `token ${ghToken}` }});
+                    if(r.ok) alert("Connexion GitHub RÉUSSIE ! ✅");
+                    else alert("Échec connexion : " + r.statusText);
+                } catch(e) { alert("Erreur réseau"); }
+            },
+            async githubSync(action) {
+                const { ghUser, ghRepo, ghFile, ghToken } = DB.data.config;
+                if(!ghToken) return alert("Token manquant");
+                const url = `https://api.github.com/repos/${ghUser}/${ghRepo}/contents/${ghFile || 'db.json'}`;
+                document.getElementById('loader').style.display = 'flex';
+                
+                try {
+                    const get = await fetch(url, { headers: { Authorization: `token ${ghToken}` }});
+                    if(action === 'pull') {
+                         const json = await get.json();
+                         DB.data = JSON.parse(decodeURIComponent(escape(atob(json.content))));
+                         DB.save(); location.reload();
+                    } else {
+                        const sha = get.ok ? (await get.json()).sha : null;
+                        const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB.data))));
+                        await fetch(url, { method: 'PUT', headers: { Authorization: `token ${ghToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: "Update ERP", content, sha }) });
+                        alert("Cloud OK");
+                    }
+                } catch(e) { alert(e); }
+                document.getElementById('loader').style.display = 'none';
+            },
+            async uploadCertif(filename, base64Content) {
+                const { ghUser, ghRepo, ghToken, ghPath } = DB.data.config;
+                const path = `${ghPath}${filename}`;
+                const url = `https://api.github.com/repos/${ghUser}/${ghRepo}/contents/${path}`;
+                
+                // Check if file exists to get SHA
+                let sha = null;
+                try {
+                    const check = await fetch(url, { headers: { Authorization: `token ${ghToken}` }});
+                    if(check.ok) sha = (await check.json()).sha;
+                } catch(e) {}
+
+                await fetch(url, {
+                    method: 'PUT',
+                    headers: { Authorization: `token ${ghToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: "Add Certif HTML", content: base64Content, sha: sha })
+                });
+            },
+            async pushCloudCertifs(saleId) {
+                const sale = DB.data.sales.find(s => s.id === saleId);
+                if(!sale) return;
+                
+                document.getElementById('loader').style.display = 'flex';
+                document.getElementById('loader-msg').innerText = "Génération & Upload GitHub...";
+
+                try {
+                    for(const item of sale.items) {
+                        for(let i=0; i<item.qty; i++) {
+                            const htmlContent = WebGen.generate(item.name, sale.client, sale.date, item.nfcs[i]);
+                            const fileName = `Certif_${sale.id}_${item.name.replace(/\s+/g,'_')}_${i+1}.html`;
+                            const contentBase64 = btoa(unescape(encodeURIComponent(htmlContent)));
+                            
+                            await DataManager.uploadCertif(fileName, contentBase64);
+                        }
+                    }
+                    alert("Pages Certificats publiées sur GitHub !");
+                } catch(e) {
+                    alert("Erreur Upload: " + e);
+                }
+                document.getElementById('loader').style.display = 'none';
+            },
+            exportLocal() {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(DB.data)], {type:'application/json'}));
+                a.download = 'backup.json'; a.click();
+            },
+            importLocal(input) {
+                const r = new FileReader();
+                r.onload = e => { DB.data = JSON.parse(e.target.result); DB.save(); location.reload(); };
+                r.readAsText(input.files[0]);
+            }
+        };
+
+        DB.init();
+        Router.go('dashboard');
+        
+        // Listeners for Sales Preview
+        ['invDate', 'invTransId', 'clientName', 'clientPseudo', 'clientAddr'].forEach(id => { 
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('input', () => Sales.updatePreview()); 
+        });
+    </script>
+</body>
+</html>
